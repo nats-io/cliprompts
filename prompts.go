@@ -22,6 +22,7 @@ var cli PromptLib
 // set a Logger during a test (cli.LogFn = t.Log) to debug interactive prompts
 var LogFn Logger
 
+// lint:ignore U1000
 var output io.Writer = os.Stdout
 
 type PromptLib interface {
@@ -49,6 +50,10 @@ func ResetPromptLib() {
 
 func SetOutput(out io.Writer) {
 	output = out
+}
+
+func GetOutput() io.Writer {
+	return output
 }
 
 func Underline(s string) string {
