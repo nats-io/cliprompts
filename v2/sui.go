@@ -1,32 +1,41 @@
+/*
+ * Copyright 2018-2019 The NATS Authors
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 package cliprompts
 
 import (
+	"errors"
+
 	"github.com/AlecAivazis/survey/v2"
 )
 
 type SurveyUI struct{}
 
-func (sui *SurveyUI) Prompt(label string, value string, edit bool, validator Validator) (string, error) {
+func (sui *SurveyUI) Prompt(label string, value string, o ...Opt) (string, error) {
 	v := value
 	p := &survey.Input{
 		Message: label,
 		Default: value,
 	}
-	if err := survey.AskOne(p, &v, survey.WithValidator(sui.wrap(validator))); err != nil {
-		return "", err
-	}
-	return v, nil
-}
 
-func (sui *SurveyUI) PromptWithHelp(label string, value string, edit bool, validator Validator, help string) (string, error) {
-	v := value
-	p := &survey.Input{
-		Message: label,
-		Default: value,
-		Help:    help,
+	opts := processOpts(o...)
+	if opts.Help != "" {
+		p.Help = opts.Help
 	}
-
-	if err := survey.AskOne(p, &v, survey.WithValidator(sui.wrap(validator))); err != nil {
+	if err := survey.AskOne(p, &v, survey.WithValidator(sui.wrap(opts.Fn))); err != nil {
 		return "", err
 	}
 	return v, nil
@@ -42,69 +51,84 @@ func (sui *SurveyUI) wrap(validator Validator) survey.Validator {
 	}
 }
 
-func (sui *SurveyUI) PromptYN(m string, defaultValue bool) (bool, error) {
+func (sui *SurveyUI) Confirm(m string, defaultValue bool, o ...Opt) (bool, error) {
 	v := defaultValue
 	p := &survey.Confirm{
 		Message: m,
 		Default: defaultValue,
 	}
-	if err := survey.AskOne(p, &v, nil); err != nil {
+	opts := processOpts(o...)
+	if opts.Help != "" {
+		p.Help = opts.Help
+	}
+
+	if opts.Fn != nil {
+		return false, errors.New("validators are not supported on confirm")
+	}
+
+	if err := survey.AskOne(p, &v); err != nil {
 		return false, err
 	}
 	return v, nil
 }
 
-func (sui *SurveyUI) PromptSecret(m string) (string, error) {
+func (sui *SurveyUI) Password(m string, o ...Opt) (string, error) {
 	v := ""
 	p := &survey.Password{
 		Message: m,
 	}
-	if err := survey.AskOne(p, &v, nil); err != nil {
+	opts := processOpts(o...)
+	if opts.Help != "" {
+		p.Help = opts.Help
+	}
+	if err := survey.AskOne(p, &v, survey.WithValidator(sui.wrap(opts.Fn))); err != nil {
 		return "", err
 	}
 	return v, nil
 }
 
-func (sui *SurveyUI) PromptChoices(m string, value string, choices []string) (int, error) {
-	v := ""
+func (sui *SurveyUI) Select(m string, value string, choices []string, o ...Opt) (int, error) {
+	var v int
+
 	p := &survey.Select{
 		Message: m,
 		Options: choices,
+		Default: value,
+	}
+	opts := processOpts(o...)
+	if opts.Help != "" {
+		p.Help = opts.Help
 	}
 
-	if value != "" {
-		p.Default = value
+	if opts.Fn != nil {
+		return -1, errors.New("validators are not supported on select")
 	}
-	if err := survey.AskOne(p, &v, nil); err != nil {
+
+	if err := survey.AskOne(p, &v); err != nil {
 		return -1, err
 	}
-	idx := -1
-	for i, t := range choices {
-		if t == v {
-			idx = i
-			break
-		}
-	}
-	return idx, nil
+	return v, nil
 }
 
-func (sui *SurveyUI) PromptMultipleChoices(m string, choices []string) ([]int, error) {
-	v := make([]string, 0)
+func (sui *SurveyUI) MultiSelect(m string, choices []string, o ...Opt) ([]int, error) {
+	var idx []int
 	p := &survey.MultiSelect{
 		Message: m,
 		Options: choices,
 	}
-	if err := survey.AskOne(p, &v, nil); err != nil {
+
+	opts := processOpts(o...)
+	if opts.Help != "" {
+		p.Help = opts.Help
+	}
+
+	if opts.Fn != nil {
+		return nil, errors.New("validators are not supported on multiselect")
+	}
+
+	if err := survey.AskOne(p, &idx); err != nil {
 		return nil, err
 	}
 
-	idx := make([]int, 0)
-	for _, t := range v {
-		for i, c := range choices {
-			if c == t {
-				idx = append(idx, i)
-			}
-		}
-	}
 	return idx, nil
 }
