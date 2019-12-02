@@ -1,4 +1,4 @@
-// +build darwin
+// +build !windows,!darwin
 
 /*
  * Copyright 2018-2019 The NATS Authors
@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-
 package cliprompts
 
 import "os/exec"
 
 func open(url string) *exec.Cmd {
-	return exec.Command("open", url)
+	return nil
 }

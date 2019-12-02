@@ -1,7 +1,5 @@
-// +build darwin
-
 /*
- * Copyright 2018-2019 The NATS Authors
+ * Copyright 2018 The NATS Authors
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,11 +13,10 @@
  * limitations under the License.
  */
 
-
 package cliprompts
 
 import "os/exec"
 
-func open(url string) *exec.Cmd {
-	return exec.Command("open", url)
+func Open(url string) *exec.Cmd {
+	return open(url)
 }

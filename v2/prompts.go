@@ -42,12 +42,38 @@ var LogFn Logger
 var output io.Writer = os.Stdout
 
 type PromptLib interface {
-	Prompt(label string, value string, edit bool, validator Validator) (string, error)
-	PromptWithHelp(label string, value string, edit bool, validator Validator, help string) (string, error)
-	PromptYN(m string, defaultValue bool) (bool, error)
-	PromptSecret(m string) (string, error)
-	PromptChoices(m string, value string, choices []string) (int, error)
-	PromptMultipleChoices(m string, choices []string) ([]int, error)
+	Prompt(label string, value string, opt ...Opt) (string, error)
+	Confirm(m string, defaultValue bool, o ...Opt) (bool, error)
+	Password(m string, o ...Opt) (string, error)
+	Select(m string, value string, choices []string, o ...Opt) (int, error)
+	MultiSelect(m string, choices []string, o ...Opt) ([]int, error)
+}
+
+type Opts struct {
+	Help string
+	Fn   Validator
+}
+
+type Opt func(o Opts)
+
+func processOpts(opt ...Opt) Opts {
+	var opts Opts
+	for _, o := range opt {
+		o(opts)
+	}
+	return opts
+}
+
+func Help(h string) Opt {
+	return func(o Opts) {
+		o.Help = h
+	}
+}
+
+func Val(fn Validator) Opt {
+	return func(o Opts) {
+		o.Fn = fn
+	}
 }
 
 func init() {
@@ -84,32 +110,28 @@ func Italic(s string) string {
 	return fmt.Sprintf("\033[3m%s\033[0m", s)
 }
 
-func Prompt(label string, value string, edit bool, validator Validator) (string, error) {
-	return cli.Prompt(label, value, edit, validator)
+func Prompt(label string, value string, o ...Opt) (string, error) {
+	return cli.Prompt(label, value, o...)
 }
 
-func PromptWithHelp(label string, value string, edit bool, validator Validator, help string) (string, error) {
-	return cli.PromptWithHelp(label, value, edit, validator, help)
+func ConfirmYN(m string, o ...Opt) (bool, error) {
+	return cli.Confirm(m, true, o...)
 }
 
-func PromptYN(m string) (bool, error) {
-	return cli.PromptYN(m, true)
+func ConfirmNY(m string, o ...Opt) (bool, error) {
+	return cli.Confirm(m, false, o...)
 }
 
-func PromptBoolean(m string, defaultValue bool) (bool, error) {
-	return cli.PromptYN(m, defaultValue)
+func Password(m string, o ...Opt) (string, error) {
+	return cli.Password(m, o...)
 }
 
-func PromptSecret(m string) (string, error) {
-	return cli.PromptSecret(m)
+func Select(m string, value string, choices []string, o ...Opt) (int, error) {
+	return cli.Select(m, value, choices, o...)
 }
 
-func PromptChoices(m string, value string, choices []string) (int, error) {
-	return cli.PromptChoices(m, value, choices)
-}
-
-func PromptMultipleChoices(m string, choices []string) ([]int, error) {
-	return cli.PromptMultipleChoices(m, choices)
+func MultiSelect(m string, choices []string, o ...Opt) ([]int, error) {
+	return cli.MultiSelect(m, choices, o...)
 }
 
 func EmailValidator() Validator {

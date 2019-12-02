@@ -1,5 +1,3 @@
-// +build darwin
-
 /*
  * Copyright 2018-2019 The NATS Authors
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +16,29 @@
 
 package cliprompts
 
-import "os/exec"
+import (
+	"bytes"
+	"fmt"
 
-func open(url string) *exec.Cmd {
-	return exec.Command("open", url)
+	"github.com/mitchellh/go-wordwrap"
+)
+
+func WrapString(lim uint, s string) string {
+	return wordwrap.WrapString(s, lim)
+}
+
+func WrapSprintf(lim uint, format string, a ...interface{}) string {
+	return WrapString(lim, fmt.Sprintf(format, a...))
+}
+
+func Wrap(lim uint, args ...interface{}) string {
+	var buf bytes.Buffer
+	for i, arg := range args {
+		if i > 0 {
+			buf.WriteByte(' ')
+		}
+		buf.WriteString(fmt.Sprintf("%v", arg))
+	}
+
+	return WrapString(lim, buf.String())
 }
