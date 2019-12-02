@@ -134,6 +134,10 @@ func MultiSelect(m string, choices []string, o ...Opt) ([]int, error) {
 	return cli.MultiSelect(m, choices, o...)
 }
 
+func NewEmailValidator() Opt {
+	return Val(EmailValidator())
+}
+
 func EmailValidator() Validator {
 	return func(input string) error {
 		if input != "" {
@@ -144,6 +148,10 @@ func EmailValidator() Validator {
 	}
 }
 
+func NewLengthValidator(min int) Opt {
+	return Val(LengthValidator(min))
+}
+
 func LengthValidator(min int) Validator {
 	return func(input string) error {
 		if len(input) >= min {
@@ -151,6 +159,10 @@ func LengthValidator(min int) Validator {
 		}
 		return errors.New("value is too short")
 	}
+}
+
+func NewPathOrURLValidator() Opt {
+	return Val(PathOrURLValidator())
 }
 
 func PathOrURLValidator() Validator {
@@ -176,6 +188,10 @@ func PathOrURLValidator() Validator {
 		}
 		return nil
 	}
+}
+
+func NewURLValidator(protocol ...string) Opt {
+	return Val(URLValidator(protocol...))
 }
 
 func URLValidator(protocol ...string) Validator {
