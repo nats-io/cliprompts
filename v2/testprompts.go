@@ -16,6 +16,7 @@
 package cliprompts
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -62,6 +63,12 @@ func (t *TestPrompts) Confirm(m string, v bool, o ...Opt) (bool, error) {
 		return false, fmt.Errorf("%s confirm expected a bool: %v", m, t.inputs[t.count])
 	}
 	t.logInputs("confirm", m, t.inputs[t.count])
+
+	opts := processOpts(o...)
+	if opts.Fn != nil {
+		return false, errors.New("validators are not supported on confirm")
+	}
+
 	t.count = t.count + 1
 	return val, nil
 }
@@ -72,6 +79,14 @@ func (t *TestPrompts) Password(m string, o ...Opt) (string, error) {
 		return "", fmt.Errorf("%s password expected a string: %v", m, t.inputs[t.count])
 	}
 	t.logInputs("password", m, t.inputs[t.count])
+
+	opts := processOpts(o...)
+	if opts.Fn != nil {
+		if err := opts.Fn(val); err != nil {
+			return "", err
+		}
+	}
+
 	t.count = t.count + 1
 	return val, nil
 }
@@ -81,15 +96,13 @@ func (t *TestPrompts) Select(m string, value string, choices []string, o ...Opt)
 	if !ok {
 		return -1, fmt.Errorf("%s select expected an int: %v", m, t.inputs[t.count])
 	}
-	opts := processOpts(o...)
-	if opts.Fn != nil {
-		if err := opts.Fn(choices[val]); err != nil {
-			return -1, err
-		}
-	}
-
 	t.logInputs("select", m, fmt.Sprintf("[%s]", strings.Join(choices, ",\n\t")))
 	t.logInputs("select", "   selection", fmt.Sprintf("%d (%s)", val, choices[val]))
+
+	opts := processOpts(o...)
+	if opts.Fn != nil {
+		return -1, errors.New("validators are not supported on select")
+	}
 	t.count = t.count + 1
 	return val, nil
 }
@@ -98,6 +111,11 @@ func (t *TestPrompts) MultiSelect(m string, choices []string, o ...Opt) ([]int, 
 	val, ok := t.inputs[t.count].([]int)
 	if !ok {
 		return nil, fmt.Errorf("%s multiselect expected []int: %v", m, t.inputs[t.count])
+	}
+
+	opts := processOpts(o...)
+	if opts.Fn != nil {
+		return nil, errors.New("validators are not supported on multiselect")
 	}
 
 	t.logInputs("multiselect", m, t.inputs[t.count])
