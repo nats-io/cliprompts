@@ -114,12 +114,8 @@ func Prompt(label string, value string, o ...Opt) (string, error) {
 	return cli.Prompt(label, value, o...)
 }
 
-func ConfirmYN(m string, o ...Opt) (bool, error) {
-	return cli.Confirm(m, true, o...)
-}
-
-func ConfirmNY(m string, o ...Opt) (bool, error) {
-	return cli.Confirm(m, false, o...)
+func Confirm(m string, value bool,  o ...Opt) (bool, error) {
+	return cli.Confirm(m, value, o...)
 }
 
 func Password(m string, o ...Opt) (string, error) {

@@ -18,11 +18,11 @@ func Test_PromptTypeCheck(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "a", v)
 
-	fv, err := ConfirmYN("m")
+	fv, err := Confirm("m", true)
 	require.NoError(t, err)
 	require.False(t, fv)
 
-	tv, err := ConfirmNY("m")
+	tv, err := Confirm("m", false)
 	require.NoError(t, err)
 	require.True(t, tv)
 
@@ -43,11 +43,11 @@ func Test_PromptTypeCheck(t *testing.T) {
 
 func Test_ErrIfBadTestInput(t *testing.T) {
 	cli = NewTestPrompts([]interface{}{"a"})
-	_, err := ConfirmYN("m")
+	_, err := Confirm("m", true)
 	require.EqualError(t, err, "m confirm expected a bool: a")
 
 	cli = NewTestPrompts([]interface{}{"a"})
-	_, err = ConfirmNY("m")
+	_, err = Confirm("m", false)
 	require.EqualError(t, err, "m confirm expected a bool: a")
 
 	cli = NewTestPrompts([]interface{}{true})
