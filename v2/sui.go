@@ -85,12 +85,13 @@ func (sui *SurveyUI) Password(m string, o ...Opt) (string, error) {
 func (sui *SurveyUI) Select(m string, value string, choices []string, o ...Opt) (int, error) {
 	var v int
 
+	if value == "" && len(choices) > 0 {
+		value = choices[0]
+	}
 	p := &survey.Select{
 		Message: m,
 		Options: choices,
-	}
-	if value == "" && len(choices) > 0 {
-		p.Default = choices[0]
+		Default: value,
 	}
 	opts := processOpts(o...)
 	if opts.Help != "" {
