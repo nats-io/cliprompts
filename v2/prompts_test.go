@@ -16,6 +16,7 @@
 package cliprompts
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -34,10 +35,14 @@ func TestEmailValidator(t *testing.T) {
 		{"a@a", false}, // this is a bad, but valid email on a local network
 		{"a@a.com", false},
 	}
-	fun := EmailValidator()
+
+	o := NewEmailValidator()
+	var opts Opts
+	o(&opts)
+	require.NotNil(t, opts.Fn)
 
 	for _, vv := range tests {
-		err := fun(vv.value)
+		err := opts.Fn(vv.value)
 		if err != nil && vv.shouldFail == false {
 			t.Fatalf("expected not fail: %v", vv.value)
 		} else if err == nil && vv.shouldFail {
@@ -47,39 +52,89 @@ func TestEmailValidator(t *testing.T) {
 }
 
 func TestLengthValidator(t *testing.T) {
-	fun := LengthValidator(0)
-	require.NoError(t, fun(""))
-	require.NoError(t, fun("a"))
-	require.NoError(t, fun("aaa"))
+	o := NewLengthValidator(0)
+	var opts Opts
+	o(&opts)
+	require.NotNil(t, opts.Fn)
+	require.NoError(t, opts.Fn(""))
+	require.NoError(t, opts.Fn("a"))
+	require.NoError(t, opts.Fn("aaa"))
 
-	fun = LengthValidator(1)
-	require.Error(t, fun(""))
-	require.NoError(t, fun("a"))
-	require.NoError(t, fun("aaa"))
+	o = NewLengthValidator(1)
+	o(&opts)
+	require.Error(t, opts.Fn(""))
+	require.NoError(t, opts.Fn("a"))
+	require.NoError(t, opts.Fn("aaa"))
+}
+
+func TestNewLengthValidator(t *testing.T) {
+	o := NewLengthValidator(1)
+	var opts Opts
+	o(&opts)
+	require.NotNil(t, opts.Fn)
 }
 
 func TestPathOrURLValidator(t *testing.T) {
-	fun := PathOrURLValidator()
-	require.Error(t, fun(""))
-	require.Error(t, fun("/tmp"))
+	o := NewPathOrURLValidator()
+	var opts Opts
+	o(&opts)
+	require.NotNil(t, opts.Fn)
+
+	require.Error(t, opts.Fn(""))
+	require.Error(t, opts.Fn("/tmp"))
 	f, err := ioutil.TempFile("", "file")
 	require.NoError(t, err)
 	defer func() {
 		f.Close()
 		os.Remove(f.Name())
 	}()
-	require.NoError(t, fun(f.Name()))
-	require.NoError(t, fun("http://www.google.com"))
+	require.NoError(t, opts.Fn(f.Name()))
+	require.NoError(t, opts.Fn("http://www.google.com"))
 }
 
 func TestURLValidator(t *testing.T) {
-	fun := URLValidator("http", "https")
-	require.Error(t, fun(""))
-	require.Error(t, fun("/tmp"))
-	require.Error(t, fun("https://"))
-	require.Error(t, fun("ftp://localhost/path"))
-	require.NoError(t, fun("http://localhost/path"))
-	require.NoError(t, fun("http://localhost"))
-	require.NoError(t, fun("HTTP://localhost"))
-	require.NoError(t, fun("https://localhost"))
+	o := NewURLValidator("http", "https")
+	var opts Opts
+	o(&opts)
+	require.NotNil(t, opts.Fn)
+
+	require.Error(t, opts.Fn(""))
+	require.Error(t, opts.Fn("/tmp"))
+	require.Error(t, opts.Fn("https://"))
+	require.Error(t, opts.Fn("ftp://localhost/path"))
+	require.NoError(t, opts.Fn("http://localhost/path"))
+	require.NoError(t, opts.Fn("http://localhost"))
+	require.NoError(t, opts.Fn("HTTP://localhost"))
+	require.NoError(t, opts.Fn("https://localhost"))
+}
+
+func TestItalic(t *testing.T) {
+	v := Italic("test")
+	require.Equal(t, fmt.Sprintf(italicTemplate, "test"), v)
+}
+
+func TestBold(t *testing.T) {
+	v := Bold("test")
+	require.Equal(t, fmt.Sprintf(boldTemplate, "test"), v)
+}
+
+func TestUnderline(t *testing.T) {
+	v := Underline("test")
+	require.Equal(t, fmt.Sprintf(underlineTemplate, "test"), v)
+}
+
+func TestHelp(t *testing.T) {
+	fn := Help("hello")
+	var opts Opts
+	fn(&opts)
+	require.Equal(t, "hello", opts.Help)
+}
+
+func TestVal(t *testing.T) {
+	fn := Val(func(v string) error {
+		return nil
+	})
+	var opts Opts
+	fn(&opts)
+	require.NotNil(t, opts.Fn)
 }

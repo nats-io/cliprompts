@@ -62,3 +62,40 @@ func Test_ErrIfBadTestInput(t *testing.T) {
 	_, err = MultiSelect("m", []string{"a", "b", "c"})
 	require.EqualError(t, err, "m multiselect expected []int: a")
 }
+
+func Test_TestPromptsValidator(t *testing.T) {
+	cli := NewTestPrompts([]interface{}{"a"})
+	var called bool
+	v, err := cli.Prompt("test", "x", Val(func(s string) error {
+		called = true
+		return nil
+	}))
+
+	require.NoError(t, err)
+	require.Equal(t, "a", v)
+	require.True(t, called)
+}
+
+func Test_MultiSelectNoValidator(t *testing.T) {
+	_, err := MultiSelect("test", []string{"a", "b"}, Val(func(s string) error {
+		return nil
+	}))
+	require.Error(t, err)
+	require.Equal(t, errValidatorNotSupported, err)
+}
+
+func Test_SelectNoValidator(t *testing.T) {
+	_, err := Select("test", "a", []string{"a", "b"}, Val(func(s string) error {
+		return nil
+	}))
+	require.Error(t, err)
+	require.Equal(t, errValidatorNotSupported, err)
+}
+
+func Test_ConfirmValidator(t *testing.T) {
+	_, err := Confirm("test", true, Val(func(s string) error {
+		return nil
+	}))
+	require.Error(t, err)
+	require.Equal(t, errValidatorNotSupported, err)
+}
