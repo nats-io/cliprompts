@@ -88,7 +88,9 @@ func (sui *SurveyUI) Select(m string, value string, choices []string, o ...Opt) 
 	p := &survey.Select{
 		Message: m,
 		Options: choices,
-		Default: value,
+	}
+	if value == "" && len(choices) > 0 {
+		p.Default = choices[0]
 	}
 	opts := processOpts(o...)
 	if opts.Help != "" {
