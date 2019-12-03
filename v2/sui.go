@@ -13,12 +13,9 @@
  * limitations under the License.
  */
 
-
 package cliprompts
 
 import (
-	"errors"
-
 	"github.com/AlecAivazis/survey/v2"
 )
 
@@ -62,10 +59,6 @@ func (sui *SurveyUI) Confirm(m string, defaultValue bool, o ...Opt) (bool, error
 		p.Help = opts.Help
 	}
 
-	if opts.Fn != nil {
-		return false, errors.New("validators are not supported on confirm")
-	}
-
 	if err := survey.AskOne(p, &v); err != nil {
 		return false, err
 	}
@@ -77,10 +70,12 @@ func (sui *SurveyUI) Password(m string, o ...Opt) (string, error) {
 	p := &survey.Password{
 		Message: m,
 	}
+
 	opts := processOpts(o...)
 	if opts.Help != "" {
 		p.Help = opts.Help
 	}
+
 	if err := survey.AskOne(p, &v, survey.WithValidator(sui.wrap(opts.Fn))); err != nil {
 		return "", err
 	}
@@ -100,10 +95,6 @@ func (sui *SurveyUI) Select(m string, value string, choices []string, o ...Opt) 
 		p.Help = opts.Help
 	}
 
-	if opts.Fn != nil {
-		return -1, errors.New("validators are not supported on select")
-	}
-
 	if err := survey.AskOne(p, &v); err != nil {
 		return -1, err
 	}
@@ -120,10 +111,6 @@ func (sui *SurveyUI) MultiSelect(m string, choices []string, o ...Opt) ([]int, e
 	opts := processOpts(o...)
 	if opts.Help != "" {
 		p.Help = opts.Help
-	}
-
-	if opts.Fn != nil {
-		return nil, errors.New("validators are not supported on multiselect")
 	}
 
 	if err := survey.AskOne(p, &idx); err != nil {

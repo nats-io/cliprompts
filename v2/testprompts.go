@@ -16,7 +16,6 @@
 package cliprompts
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -63,12 +62,6 @@ func (t *TestPrompts) Confirm(m string, v bool, o ...Opt) (bool, error) {
 		return false, fmt.Errorf("%s confirm expected a bool: %v", m, t.inputs[t.count])
 	}
 	t.logInputs("confirm", m, t.inputs[t.count])
-
-	opts := processOpts(o...)
-	if opts.Fn != nil {
-		return false, errors.New("validators are not supported on confirm")
-	}
-
 	t.count = t.count + 1
 	return val, nil
 }
@@ -98,11 +91,6 @@ func (t *TestPrompts) Select(m string, value string, choices []string, o ...Opt)
 	}
 	t.logInputs("select", m, fmt.Sprintf("[%s]", strings.Join(choices, ",\n\t")))
 	t.logInputs("select", "   selection", fmt.Sprintf("%d (%s)", val, choices[val]))
-
-	opts := processOpts(o...)
-	if opts.Fn != nil {
-		return -1, errors.New("validators are not supported on select")
-	}
 	t.count = t.count + 1
 	return val, nil
 }
@@ -112,12 +100,6 @@ func (t *TestPrompts) MultiSelect(m string, choices []string, o ...Opt) ([]int, 
 	if !ok {
 		return nil, fmt.Errorf("%s multiselect expected []int: %v", m, t.inputs[t.count])
 	}
-
-	opts := processOpts(o...)
-	if opts.Fn != nil {
-		return nil, errors.New("validators are not supported on multiselect")
-	}
-
 	t.logInputs("multiselect", m, t.inputs[t.count])
 	t.count = t.count + 1
 	return val, nil

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package cliprompts
 
 import (
@@ -54,24 +53,24 @@ type Opts struct {
 	Fn   Validator
 }
 
-type Opt func(o Opts)
+type Opt func(o *Opts)
 
 func processOpts(opt ...Opt) Opts {
 	var opts Opts
 	for _, o := range opt {
-		o(opts)
+		o(&opts)
 	}
 	return opts
 }
 
 func Help(h string) Opt {
-	return func(o Opts) {
+	return func(o *Opts) {
 		o.Help = h
 	}
 }
 
 func Val(fn Validator) Opt {
-	return func(o Opts) {
+	return func(o *Opts) {
 		o.Fn = fn
 	}
 }
@@ -98,23 +97,32 @@ func GetOutput() io.Writer {
 	return output
 }
 
+const underlineTemplate = "\xff\033[4m\xff%s\xff\033[0m\xff"
+
 func Underline(s string) string {
-	return fmt.Sprintf("\xff\033[4m\xff%s\xff\033[0m\xff", s)
+	return fmt.Sprintf(underlineTemplate, s)
 }
+
+const boldTemplate = "\033[1m%s\033[0m"
 
 func Bold(s string) string {
-	return fmt.Sprintf("\033[1m%s\033[0m", s)
+	return fmt.Sprintf(boldTemplate, s)
 }
 
+const italicTemplate = "\033[3m%s\033[0m"
+
 func Italic(s string) string {
-	return fmt.Sprintf("\033[3m%s\033[0m", s)
+	return fmt.Sprintf(italicTemplate, s)
 }
 
 func Prompt(label string, value string, o ...Opt) (string, error) {
 	return cli.Prompt(label, value, o...)
 }
 
-func Confirm(m string, value bool,  o ...Opt) (bool, error) {
+func Confirm(m string, value bool, o ...Opt) (bool, error) {
+	if err := insureNoValidator(o...); err != nil {
+		return false, err
+	}
 	return cli.Confirm(m, value, o...)
 }
 
@@ -123,11 +131,30 @@ func Password(m string, o ...Opt) (string, error) {
 }
 
 func Select(m string, value string, choices []string, o ...Opt) (int, error) {
+	if err := insureNoValidator(o...); err != nil {
+		return -1, err
+	}
 	return cli.Select(m, value, choices, o...)
 }
 
 func MultiSelect(m string, choices []string, o ...Opt) ([]int, error) {
+	if err := insureNoValidator(o...); err != nil {
+		return nil, err
+	}
 	return cli.MultiSelect(m, choices, o...)
+}
+
+var errValidatorNotSupported = errors.New("validators are not supported on this control")
+
+func insureNoValidator(o ...Opt) error {
+	var opts Opts
+	for _, v := range o {
+		v(&opts)
+	}
+	if opts.Fn != nil {
+		return errValidatorNotSupported
+	}
+	return nil
 }
 
 func NewEmailValidator() Opt {
