@@ -17,6 +17,11 @@ package cliprompts
 
 import "os/exec"
 
+// no-op open function can override for other OS as done by the 'open_darwin.go'
+var openFn = func(url string) *exec.Cmd {
+	return nil
+}
+
 func Open(url string) *exec.Cmd {
-	return open(url)
+	return openFn(url)
 }
