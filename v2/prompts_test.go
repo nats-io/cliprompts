@@ -17,7 +17,6 @@ package cliprompts
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -82,7 +81,7 @@ func TestPathOrURLValidator(t *testing.T) {
 
 	require.Error(t, opts.Fn(""))
 	require.Error(t, opts.Fn("/tmp"))
-	f, err := ioutil.TempFile("", "file")
+	f, err := os.CreateTemp("", "file")
 	require.NoError(t, err)
 	defer func() {
 		f.Close()
